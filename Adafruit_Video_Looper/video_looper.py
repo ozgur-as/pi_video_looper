@@ -96,6 +96,7 @@ class VideoLooper:
         self._alsa_hw_device = parse_hw_device(self._config.get('alsa', 'hw_device'))
         self._alsa_hw_vol_control = self._config.get('alsa', 'hw_vol_control')
         self._alsa_hw_vol_file = self._config.get('alsa', 'hw_vol_file')
+        self._alsa_hw_vol_increment = self._config.get('alsa', 'hw_vol_increment')
         # default ALSA hardware volume (volume will not be changed)
         self._alsa_hw_vol = None
         # Load sound volume file name value
@@ -427,7 +428,10 @@ class VideoLooper:
                 cmd.extend(('-c', str(self._alsa_hw_device[0])))
             cmd.extend(('set', self._alsa_hw_vol_control, '--', self._alsa_hw_vol))
             subprocess.check_call(cmd)
-            
+
+    def _change_volume(self, change_sign):
+        Popen(['amixer', 'set', self._alsa_hw_vol_control, '{0}{1}'.format(self._alsa_hw_vol_increment, change_sign)])
+
     def _handle_keyboard_shortcuts(self):
         while self._running:
             event = pygame.event.wait()
@@ -472,6 +476,12 @@ class VideoLooper:
                 if event.key == pygame.K_i:
                     self._print("i was pressed. previous chapter...")
                     self._player.sendKey("i")
+                if event.key == pygame.K_KP_PLUS:
+                    self._print("+ was pressed. volume up...")
+                    self._change_volume('+')
+                if event.key == pygame.K_KP_MINUS:
+                    self._print("- was pressed. volume down...")
+                    self._change_volume('-')                
     
     def _handle_gpio_control(self, pin):
         if self._pinMap == None:
